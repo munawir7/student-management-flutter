@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/classroom.dart';
 import '../../models/student.dart';
 import '../../viewmodels/student_viewmodel.dart';
 import 'student_detail_screen.dart';
+import '../../core/constants/app_constance.dart';
+import '../../core/widgets/custom_text_form_field.dart';
+
 
 class StudentScreen extends StatefulWidget {
 final Classroom classroom;
@@ -67,6 +71,8 @@ class _StudentScreenState extends State<StudentScreen>{
 }
 
 void _showStudentDialog({Student? student}){
+  final formKey = GlobalKey<FormState>();
+
   final nameController = TextEditingController();
   final ageController = TextEditingController();
   final phoneController = TextEditingController();
@@ -88,70 +94,116 @@ void _showStudentDialog({Student? student}){
        title: Text(student == null ? 'Add Student' : 'Edit Student'),
 
         content: SingleChildScrollView(
-          child: Column(
+          child: Form(
+            key: formKey,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Student Name'
-                ),
+             CustomTextFormField(
+              controller: nameController, 
+              labelText: AppConstance.studentName, 
+              hintText: AppConstance.studentNameHint,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty){
+                  return 'Please enter student name';
+                }
+                return null;
+              },
               ),
-              TextField(
-                controller: ageController,
+              SizedBox(height: 12,),
+              CustomTextFormField(
+                controller: ageController, 
+                labelText: AppConstance.age, 
+                hintText: AppConstance.ageHint,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Age',
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty){
+                    return 'Please enter age';
+                  }
+                  final age = int.tryParse(value);
+
+                  if (age == null || age <= 0){
+                    return 'Please enter a valid age';
+                  }
+                  return null;
+                },
                 ),
-              ),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Phone'
-                ),
-              ),
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                labelText: 'Email',
-                ),
-              ),
-              TextField(
-                controller: addressController,
-                decoration: InputDecoration(
-                  labelText: 'Address'
-                ),
-              ),
+                SizedBox(height: 12,),
+
+                CustomTextFormField(
+                  controller: phoneController, 
+                  labelText: AppConstance.phone, 
+                  hintText: AppConstance.phoneHint,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  validator: (value){
+                    if (value == null || value.isEmpty){
+                      return 'Please enter phone number';
+                    }
+                    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(value)){
+                      return 'Enter a valid 10-digit mobile number';
+                    }
+                    return null;
+                  },
+                  ),
+                  SizedBox(height: 12,),
+
+                  CustomTextFormField(
+                    controller: emailController, 
+                    labelText: AppConstance.email, 
+                    hintText: AppConstance.emailHint,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty){
+                        return 'Please enter email';
+                      }
+                      if (!RegExp(
+                        r'^[^\s]+@[^@\s]+\.[^@\s]+$',
+                      ).hasMatch(value.trim())) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                    ),
+                    SizedBox(height: 12,),
+                    CustomTextFormField(
+                      controller: addressController, 
+                      labelText: AppConstance.address, 
+                      hintText: AppConstance.addressHint,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty){
+                          return 'Please enter address';
+                        }
+                        return null;
+                        
+                      },),
 
             ],
-          ),
+          ),),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext), 
             child: Text('Cancel'),),
             ElevatedButton(
+              
               onPressed: () async{
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
                 final name = nameController.text.trim();
-                final age = int.tryParse(ageController.text.trim());
+                final age = int.parse(ageController.text.trim());
                 final phone = phoneController.text.trim();
                 final email = emailController.text.trim();
                 final address = addressController.text.trim();
 
-                if (name.isEmpty ||
-                    age == null ||
-                    age <= 0 ||
-                    phone.isEmpty ||
-                    email.isEmpty ||
-                    address.isEmpty ){
-                      ScaffoldMessenger.of(dialogContext).showSnackBar(
-                        SnackBar(
-                          content: Text('Please enter valid student details'),)
-                      );
-                      return;
-                    }
+                
                    final updatedStudent = Student(
                     id: student?.id,
                     classroomId: widget.classroom.id!,

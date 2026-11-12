@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/app_constance.dart';
+import '../../core/widgets/custom_text_form_field.dart';
 import '../../models/classroom.dart';
 import '../../viewmodels/classroom_viewmodel.dart';
 import '../student/student_screen.dart';
@@ -42,21 +44,16 @@ class ClassroomScreen extends StatefulWidget{
   child: Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Classroom Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 12,),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              CustomTextFormField(
+                controller: nameController, 
+                labelText: AppConstance.classroomName, 
+                hintText: AppConstance.classroomHint),
+                SizedBox(height: 12,),
+
+               CustomTextFormField(
+                controller: descriptionController, 
+                labelText: AppConstance.description, 
+                hintText: AppConstance.descriptionHint) 
             ],
 
           ),),
@@ -111,7 +108,8 @@ ScaffoldMessenger.of(context).showSnackBar(
 ],
 
         );
-     });
+     }
+     );
   }
   void _deleteClassroom(int id)async{
     final confirm = await showDialog<bool>(
